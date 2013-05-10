@@ -14,14 +14,16 @@ import sys
 from IPython.nbformat import current as nbformat
 
 
-def clear_outputs(nb):
+def clear_outputs(nb,strip_prompt=False):
     """Clear output of notebook `nb` INPLACE."""
     for ws in nb.worksheets:
         for cell in ws.cells:
             cell.outputs = []
+            if strip_prompt and "prompt_number" in cell:
+                del cell["prompt_number"]
 
 
-def stripoutput(inputs, inplace=False):
+def stripoutput(inputs, inplace=False, strip_prompt=False):
     """
     Strip output of notebooks.
 
@@ -36,14 +38,14 @@ def stripoutput(inputs, inplace=False):
     """
     if not inputs:
         nb = nbformat.read(sys.stdin, 'ipynb')
-        clear_outputs(nb)
+        clear_outputs(nb, strip_prompt=strip_prompt)
         nbformat.write(nb, sys.stdout, 'ipynb')
         return
     
     for inpath in inputs:
         with file(inpath) as fp:
             nb = nbformat.read(fp, 'ipynb')
-        clear_outputs(nb)
+        clear_outputs(nb, strip_prompt=strip_prompt)
         if inplace:
             with file(inpath, 'w') as fp:
                 nbformat.write(nb, fp, 'ipynb')
@@ -58,6 +60,8 @@ def main():
                         help='Paths to notebook files.')
     parser.add_argument('-i', '--inplace', default=False, action='store_true',
                         help='Overwrite existing notebook when given.')
+    parser.add_argument('--strip-prompt', default=False, action='store_true',
+                        help='Strip also the prompt numbers')
     args = parser.parse_args()
     stripoutput(**vars(args))
 
