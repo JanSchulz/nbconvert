@@ -5,6 +5,7 @@ Clear outputs of IPython notebooks.
 
 By default, it prints the notebooks without outputs into stdout.
 When the --inplace option is given, all files will be overwritten.
+If no input is given, STDIN is used and output is printed to STDOUT.
 
 """
 
@@ -33,6 +34,12 @@ def stripoutput(inputs, inplace=False):
         Default is `False`.
 
     """
+    if not inputs:
+        nb = nbformat.read(sys.stdin, 'ipynb')
+        clear_outputs(nb)
+        nbformat.write(nb, sys.stdout, 'ipynb')
+        return
+    
     for inpath in inputs:
         with file(inpath) as fp:
             nb = nbformat.read(fp, 'ipynb')
@@ -47,7 +54,7 @@ def stripoutput(inputs, inplace=False):
 def main():
     from argparse import ArgumentParser
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument('inputs', nargs='+', metavar='input',
+    parser.add_argument('inputs', nargs='*', metavar='input',
                         help='Paths to notebook files.')
     parser.add_argument('-i', '--inplace', default=False, action='store_true',
                         help='Overwrite existing notebook when given.')
